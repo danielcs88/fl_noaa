@@ -1,0 +1,10 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+min.py
+min_ftp.py
+min_noaa.py
