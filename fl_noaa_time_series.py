@@ -328,7 +328,7 @@ for variable in DATAFRAMES:
     )
 
 # %%
-FL = WEATHER.query("state == 8 and year >= 1959").reset_index(drop=True).copy()_
+FL = WEATHER.query("state == 8 and year >= 1959").reset_index(drop=True).copy()
 
 # %%
 FL
