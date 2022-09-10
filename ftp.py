@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # %%
-# %
-"""
+r"""
 Script to download latest values for weather variables from NOAA FTP Server
 """
 
@@ -18,7 +17,6 @@ __email__ = "jcard151@fiu.edu"
 import ftplib
 import os
 from datetime import datetime
-
 
 # %%
 # Delete existing *.csv files or NOAA weather files

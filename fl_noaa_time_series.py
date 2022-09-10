@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 # %%
-"""
+r"""
 Time Series tidy Pandas DataFrame script.
 """
+
 # %%
 __author__ = "Daniel Cárdenas"
 __version__ = "1.0"
@@ -15,6 +16,7 @@ import re
 
 import pandas as pd
 
+# %%
 import ftp  # This will download the most recent files from NOAA FTP
 
 # %%
@@ -125,7 +127,7 @@ field contains 11 columns. The other data files still contain 10 columns.
 ║ SEPT-VALUE      ║ 68-74           ║                                                ║
 ╠═════════════════╬═════════════════╬════════════════════════════════════════════════╣
 ║ OCT-VALUE       ║ 75-81           ║                                                ║
-╠═════════════════╬═════════════════╬════════════════════════════════════════════════╣
+╠═════════════��═══╬═════════════════╬════════════════════════════════════════════════╣
 ║ NOV-VALUE       ║ 82-88           ║                                                ║
 ╠═════════════════╬═════════════════╬════════════════════════════════════════════════╣
 ║ DEC-VALUE       ║ 89-95           ║                                                ║
@@ -167,11 +169,10 @@ print(FILENAME)
 with open(FILENAME, "r") as file:
     DATA = file.read()
 
-"""
-1. Find patterns matching 1st column with names
-2. Separate using spaces.
-3. Replace all spaces with commas.
-"""
+# 1. Find patterns matching 1st column with names
+# 2. Separate using spaces.
+# 3. Replace all spaces with commas.
+
 
 FORMATREGEX = re.compile(
     r"""(
@@ -212,7 +213,8 @@ MATCHES = []
 for groups in FORMATREGEX.findall(DATA):
     info = ",".join(groups[1:5])
     months = ",".join(groups[6::2])
-    final = info + "," + months
+    final = f"{info},{months}"
+
     MATCHES.append(final)
 
 CSV_NAME = VARIABLES.get(FILENAME)
@@ -228,11 +230,9 @@ for FILENAME in KEYS[1:]:
     with open(FILENAME, "r") as file:
         DATA = file.read()
 
-    """
-    1. Find patterns matching 1st column with names
-    2. Separate using spaces.
-    3. Replace all spaces with commas.
-    """
+    # 1. Find patterns matching 1st column with names
+    # 2. Separate using spaces.
+    # 3. Replace all spaces with commas.
 
     FORMATREGEX = re.compile(
         r"""(
@@ -273,7 +273,7 @@ for FILENAME in KEYS[1:]:
     for groups in FORMATREGEX.findall(DATA):
         info = ",".join(groups[1:5])
         months = ",".join(groups[6::2])
-        final = info + "," + months
+        final = f"{info},{months}"
         MATCHES.append(final)
 
     CSV_NAME = VARIABLES.get(FILENAME)
@@ -306,12 +306,12 @@ COLUMNS = [
 # %%
 LOCAL_FILES = os.listdir()
 
-# values = ["precipitation", "max_temp", "min_temp", "avg_temp"]
+values = ["precipitation.csv", "max_temp.csv", "min_temp.csv", "avg_temp.csv"]
 
 DATAFRAMES = []
 
-for file in list(os.listdir()):
-    for variable in VALUES:
+for file in os.listdir():
+    for variable in values:
         if file.startswith(variable):
             DATAFRAMES.append(file)
 
@@ -319,22 +319,18 @@ for file in list(os.listdir()):
 print(DATAFRAMES)
 
 # %%
-WEATHER = pd.DataFrame()
-
-for variable in DATAFRAMES:
-    print(variable)
-    WEATHER = WEATHER.append(
+WEATHER = pd.concat(
+    [
         pd.read_csv(variable, names=COLUMNS, na_values=["-9.99", "-99.9"])
-    )
+        for variable in DATAFRAMES
+    ]
+)
 
 # %%
-FL = WEATHER.query("state == 8 and year >= 1959").reset_index(drop=True).copy()
+FL = WEATHER.query("state == 8 and year >= 1958").reset_index(drop=True).copy()
 
 # %%
 FL
-
-# %%
-FL.describe()
 
 # %%
 DF = pd.melt(
@@ -345,8 +341,9 @@ DF = pd.melt(
     value_name="value",
 )
 
+
 # %%
-def month(text):
+def month() -> dict:
     """
     Parse abbreviated text month to its integer representation.
 
@@ -357,14 +354,14 @@ def month(text):
     values = list(range(1, len(keys) + 1))
     months = dict(zip(keys, values))
 
-    month = months.get(text)
+    # month = months.get(text)
 
-    return month
+    return months
 
 
 # %%
-DF["month"] = DF.apply(lambda x: month(x["month"]), axis=1)
-
+# Map
+DF["month"] = DF["month"].map(month())
 
 # %%
 DF["date"] = pd.to_datetime(DF[["year", "month"]].assign(day=1))
@@ -381,30 +378,28 @@ DF = (
 
 
 # %%
-FLORIDA = pd.read_csv("data/florida_county_population.csv")
-
-
-# %%
-def county_name(fips):
+def county_name() -> dict:
     """
     Returns county name for FIPS code.
     """
 
+    FLORIDA = pd.read_csv("data/florida_county_population.csv")
     keys = list(FLORIDA["FIPS"])
     values = list(FLORIDA.county)
     counties = dict(zip(keys, values))
 
-    county = counties.get(fips)
+    # county = counties.get(fips)
 
-    return county
-
-
-# %%
-DF["county"] = DF.apply(lambda x: county_name(x["fips"]), axis=1)
+    return counties
 
 
 # %%
-def variable_weather(variable):
+DF["county"] = DF["fips"].map(county_name())
+
+
+# %%
+def variable_weather() -> dict:
+    # def variable_weather(variable):
     """
     Change variable integer to actual variable.
 
@@ -421,65 +416,32 @@ def variable_weather(variable):
 
     variables = dict(zip(keys, values))
 
-    weather = variables.get(variable)
+    # weather = variables.get(variable)
 
-    return weather
+    return variables
 
 
 # %%
-DF["element"] = DF.apply(lambda x: variable_weather(x["variable"]), axis=1)
+DF["element"] = DF["variable"].map(variable_weather())
 
 # %%
 DF = DF[["date", "fips", "county", "element", "value"]]
 
 # %%
-# def negative_clean_up(value):
-#     """
-#     Converts all missing values to NaN (-9.99 and -99.90)
-#     """
-
-#     if value in (-9.99, -99.90):
-#         value = float("NaN")
-
-#     return value
-
-# %%
-# DF.value = DF.apply(lambda x: negative_clean_up(x["value"]), axis=1)
-
-# %%
 DF = DF.dropna()
 
 # %%
-DF.tail()
+select_variable = lambda variable: (
+    DF.query("element == @variable")
+    .reset_index(drop=True)
+    .sort_values(by=["fips", "date"])
+    .rename(columns={"value": variable})
+    .drop(["element"], axis=1)
+)
 
 # %%
-PRECIPITATION = (
-    DF.query("element == 'precipitation'")
-    .reset_index(drop=True)
-    .sort_values(by=["fips", "date"])
-    .rename(columns={"value": "precipitation"})
-    .drop(["element"], axis=1)
-)
-AVG_TEMP = (
-    DF.query("element == 'avg_temp'")
-    .reset_index(drop=True)
-    .sort_values(by=["fips", "date"])
-    .rename(columns={"value": "avg_temp"})
-    .drop(["element"], axis=1)
-)
-MAX_TEMP = (
-    DF.query("element == 'max_temp'")
-    .reset_index(drop=True)
-    .sort_values(by=["fips", "date"])
-    .rename(columns={"value": "max_temp"})
-    .drop(["element"], axis=1)
-)
-MIN_TEMP = (
-    DF.query("element == 'min_temp'")
-    .reset_index(drop=True)
-    .sort_values(by=["fips", "date"])
-    .rename(columns={"value": "min_temp"})
-    .drop(["element"], axis=1)
+PRECIPITATION, AVG_TEMP, MAX_TEMP, MIN_TEMP = (
+    select_variable(_) for _ in ["precipitation", "avg_temp", "max_temp", "min_temp"]
 )
 
 # %%
@@ -487,46 +449,43 @@ for file in os.listdir():
     if os.path.getsize(file) > 3000000:
         os.remove(file)
 
+
 # %%
-PRECIPITATION["month_change"] = (
-    PRECIPITATION.groupby("county").diff().precipitation.round(2)
+def prepare_final_df(df: pd.DataFrame, variable: str) -> pd.DataFrame:
+    """"""
+    # change = lambda df, variable, n: df[variable].diff(n)
+    # rate_change = lambda df, variable, n: df[variable].pct_change(n)
+
+    df = (
+        # df.assign(
+        #     month_change=change(df, variable, 1),
+        #     month_rate_change=rate_change(df, variable, 1),
+        #     month_yoy_change=change(df, variable, 12),
+        #     month_yoy_rate_change=rate_change(df, variable, 1),
+        # )
+        df.query("date>=1960").set_index("date")
+    )
+
+    # df.to_parquet(f"{variable}.parquet")
+    return df
+
+
+# %%
+PRECIPITATION, AVG_TEMP, MAX_TEMP, MIN_TEMP = (
+    prepare_final_df(df, variable)
+    for variable, df in dict(
+        zip(
+            ["precipitation", "avg_temp", "max_temp", "min_temp"],
+            [PRECIPITATION, AVG_TEMP, MAX_TEMP, MIN_TEMP],
+        )
+    ).items()
 )
-PRECIPITATION["month_rate_change"] = PRECIPITATION.groupby(
-    "county"
-).precipitation.pct_change()
-PRECIPITATION["month_yoy_change"] = (
-    PRECIPITATION.groupby("county").diff(12).precipitation.round(2)
-)
-PRECIPITATION["month_yoy_rate_change"] = PRECIPITATION.groupby(
-    "county"
-).precipitation.pct_change(12)
 
 # %%
-AVG_TEMP["month_change"] = AVG_TEMP.groupby("county").diff().avg_temp.round(2)
-AVG_TEMP["month_rate_change"] = AVG_TEMP.groupby("county").avg_temp.pct_change()
-AVG_TEMP["month_yoy_change"] = AVG_TEMP.groupby("county").diff(12).avg_temp.round(2)
-AVG_TEMP["month_yoy_rate_change"] = AVG_TEMP.groupby("county").avg_temp.pct_change(12)
+TEMP = pd.concat([AVG_TEMP, MIN_TEMP, MAX_TEMP], axis="columns").T.drop_duplicates().T
 
 # %%
-MAX_TEMP["month_change"] = MAX_TEMP.groupby("county").diff().max_temp.round(2)
-MAX_TEMP["month_rate_change"] = MAX_TEMP.groupby("county").max_temp.pct_change()
-MAX_TEMP["month_yoy_change"] = MAX_TEMP.groupby("county").diff(12).max_temp.round(2)
-MAX_TEMP["month_yoy_rate_change"] = MAX_TEMP.groupby("county").max_temp.pct_change(12)
+TEMP.to_parquet("temp.parquet")
 
 # %%
-MIN_TEMP["month_change"] = MIN_TEMP.groupby("county").diff().min_temp.round(2)
-MIN_TEMP["month_rate_change"] = MIN_TEMP.groupby("county").min_temp.pct_change()
-MIN_TEMP["month_yoy_change"] = MIN_TEMP.groupby("county").diff(12).min_temp.round(2)
-MIN_TEMP["month_yoy_rate_change"] = MIN_TEMP.groupby("county").min_temp.pct_change(12)
-
-# %%
-PRECIPITATION = PRECIPITATION.query("date >= 1960")
-AVG_TEMP = AVG_TEMP.query("date >= 1960")
-MAX_TEMP = MAX_TEMP.query("date >= 1960")
-MIN_TEMP = MIN_TEMP.query("date >= 1960")
-
-# %%
-PRECIPITATION.to_csv("precipitation.csv", index=False)
-AVG_TEMP.to_csv("avg_temp.csv", index=False)
-MAX_TEMP.to_csv("max_temp.csv", index=False)
-MIN_TEMP.to_csv("min_temp.csv", index=False)
+PRECIPITATION.to_parquet("precipitation.parquet")
