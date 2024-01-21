@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# pylint: disable=pointless-string-statement, pointless-statement
 # %%
 r"""
 Time Series tidy Pandas DataFrame script.
@@ -166,120 +166,58 @@ VARIABLES = dict(zip(KEYS, VALUES))
 FILENAME = KEYS[0]  # Precipitation
 print(FILENAME)
 
-with open(FILENAME, "r") as file:
+with open(FILENAME, "r", encoding="utf-8") as file:
     DATA = file.read()
 
 # 1. Find patterns matching 1st column with names
 # 2. Separate using spaces.
 # 3. Replace all spaces with commas.
 
-
 FORMATREGEX = re.compile(
-    r"""(
-        (\d{2})            # State code
-        (\d{3})            # FIPS county code (last 3 digits)
-        (\d{2})            # Variable
-        (\d{4})            # Year
-        (\s{2,3})           #    Space
-        (-?\d{1,2}.\d{2})  # January
-        (\s{2,3})           #    Space
-        (-?\d{1,2}.\d{2})  # February
-        (\s{2,3})           #    Space
-        (-?\d{1,2}.\d{2})  # March
-        (\s{2,3})           #    Space
-        (-?\d{1,2}.\d{2})  # April
-        (\s{2,3})           #    Space
-        (-?\d{1,2}.\d{2})  # May
-        (\s{2,3})           #    Space
-        (-?\d{1,2}.\d{2})  # June
-        (\s{2,3})           #    Space
-        (-?\d{1,2}.\d{2})  # July
-        (\s{2,3})           #    Space
-        (-?\d{1,2}.\d{2})  # August
-        (\s{2,3})           #    Space
-        (-?\d{1,2}.\d{2})  # September
-        (\s{2,3})           #    Space
-        (-?\d{1,2}.\d{2})  # October
-        (\s{2,3})           #    Space
-        (-?\d{1,2}.\d{2})  # November
-        (\s{2,3})           #    Space
-        (-?\d{1,2}.\d{2})  # December
-    )""",
-    re.VERBOSE,
+    r"(\d{2})(\d{3})(\d{2})(\d{4})(?:\s+)((?:-?\d+\.\d+\s+){11}-?\d+\.\d+)", re.VERBOSE
 )
 
 MATCHES = []
 
 for groups in FORMATREGEX.findall(DATA):
-    info = ",".join(groups[1:5])
-    months = ",".join(groups[6::2])
-    final = f"{info},{months}"
+    # print(groups)
+    INFO = ",".join(groups[:4])
+    MONTHS = ",".join(groups[4].split())
+    final = f"{INFO},{MONTHS}"
+    # print(final)
 
     MATCHES.append(final)
 
 CSV_NAME = VARIABLES.get(FILENAME)
 print(CSV_NAME)
 
-with open(f"{CSV_NAME}.csv", "w") as text_file:
+with open(f"{CSV_NAME}.csv", "w", encoding="utf-8") as text_file:
     for i in MATCHES:
         print(i, sep="\n", file=text_file)
 
 # %%
 for FILENAME in KEYS[1:]:
     print(FILENAME)
-    with open(FILENAME, "r") as file:
+    with open(FILENAME, "r", encoding="utf-8") as file:
         DATA = file.read()
 
     # 1. Find patterns matching 1st column with names
     # 2. Separate using spaces.
     # 3. Replace all spaces with commas.
 
-    FORMATREGEX = re.compile(
-        r"""(
-            (\d{2})            # State code
-            (\d{3})            # FIPS county code (last 3 digits)
-            (\d{2})            # Variable
-            (\d{4})            # Year
-            (\s{1,3})           # Space
-            (-?\d{1,3}.\d{2})  # January
-            (\s{1,3})           # Space
-            (-?\d{1,3}.\d{2})  # February
-            (\s{1,3})           # Space
-            (-?\d{1,3}.\d{2})  # March
-            (\s{1,3})            # Space
-            (-?\d{1,3}.\d{2})  # April
-            (\s{1,3})            # Space
-            (-?\d{1,3}.\d{2})  # May
-            (\s{1,3})            # Space
-            (-?\d{1,3}.\d{2})  # June
-            (\s{1,3})            # Space
-            (-?\d{1,3}.\d{2})  # July
-            (\s{1,3})            # Space
-            (-?\d{1,3}.\d{2})  # August
-            (\s{1,3})            # Space
-            (-?\d{1,3}.\d{2})  # September
-            (\s{1,3})            # Space
-            (-?\d{1,3}.\d{2})  # October
-            (\s{1,3})            # Space
-            (-?\d{1,3}.\d{2})  # November
-            (\s{1,3})            # Space
-            (-?\d{1,3}.\d{2})  # December
-        )""",
-        re.VERBOSE,
-    )
-
     MATCHES = []
 
     for groups in FORMATREGEX.findall(DATA):
-        info = ",".join(groups[1:5])
-        months = ",".join(groups[6::2])
-        final = f"{info},{months}"
+        # print(groups)
+        INFO = ",".join(groups[:4])
+        MONTHS = ",".join(groups[4].split())
+        final = f"{INFO},{MONTHS}"
         MATCHES.append(final)
 
     CSV_NAME = VARIABLES.get(FILENAME)
     print(CSV_NAME)
 
-    with open(f"{CSV_NAME}.csv", "w") as text_file:
+    with open(f"{CSV_NAME}.csv", "w", encoding="utf-8") as text_file:
         for i in MATCHES:
             print(i, sep="\n", file=text_file)
 
@@ -303,31 +241,22 @@ COLUMNS = [
     "dec",
 ]
 
-# %%
-LOCAL_FILES = os.listdir()
-
-values = ["precipitation.csv", "max_temp.csv", "min_temp.csv", "avg_temp.csv"]
-
-DATAFRAMES = []
-
-for file in os.listdir():
-    for variable in values:
-        if file.startswith(variable):
-            DATAFRAMES.append(file)
-
-# %%
-print(DATAFRAMES)
 
 # %%
 WEATHER = pd.concat(
     [
         pd.read_csv(variable, names=COLUMNS, na_values=["-9.99", "-99.9"])
-        for variable in DATAFRAMES
+        for variable in [
+            "precipitation.csv",
+            "max_temp.csv",
+            "min_temp.csv",
+            "avg_temp.csv",
+        ]
     ]
 )
 
 # %%
-FL = WEATHER.query("state == 8 and year >= 1958").reset_index(drop=True).copy()
+FL = WEATHER.query("state == 8").reset_index(drop=True).copy()
 
 # %%
 FL
@@ -378,17 +307,15 @@ DF = (
 
 
 # %%
-def county_name() -> dict:
+def county_name() -> dict[int, str]:
     """
     Returns county name for FIPS code.
     """
 
     FLORIDA = pd.read_csv("data/florida_county_population.csv")
     keys = list(FLORIDA["FIPS"])
-    values = list(FLORIDA.county)
+    values = list(FLORIDA["county"])
     counties = dict(zip(keys, values))
-
-    # county = counties.get(fips)
 
     return counties
 
@@ -398,31 +325,9 @@ DF["county"] = DF["fips"].map(county_name())
 
 
 # %%
-def variable_weather() -> dict:
-    # def variable_weather(variable):
-    """
-    Change variable integer to actual variable.
-
-    i.e.,
-
-    01 = Precipitation
-    02 = Average Temperature
-    27 = Maximum Temperature
-    28 = Minimum Temperature
-    """
-
-    keys = [1, 2, 27, 28]
-    values = ["precipitation", "avg_temp", "max_temp", "min_temp"]
-
-    variables = dict(zip(keys, values))
-
-    # weather = variables.get(variable)
-
-    return variables
-
-
-# %%
-DF["element"] = DF["variable"].map(variable_weather())
+DF["element"] = DF["variable"].map(
+    {1: "precipitation", 2: "avg_temp", 27: "max_temp", 28: "min_temp"}
+)
 
 # %%
 DF = DF[["date", "fips", "county", "element", "value"]]
@@ -430,49 +335,61 @@ DF = DF[["date", "fips", "county", "element", "value"]]
 # %%
 DF = DF.dropna()
 
+
 # %%
-select_variable = lambda variable: (
-    DF.query("element == @variable")
-    .reset_index(drop=True)
-    .sort_values(by=["fips", "date"])
-    .rename(columns={"value": variable})
-    .drop(["element"], axis=1)
-)
+def select_variable(df: pd.DataFrame, w_variable: str) -> pd.DataFrame:
+    return (
+        df.query("element == @w_variable")
+        .reset_index(drop=True)
+        .sort_values(by=["fips", "date"])
+        .rename(columns={"value": w_variable})
+        .drop(["element"], axis=1)
+    )
+
 
 # %%
 PRECIPITATION, AVG_TEMP, MAX_TEMP, MIN_TEMP = (
-    select_variable(_) for _ in ["precipitation", "avg_temp", "max_temp", "min_temp"]
+    DF.pipe(select_variable, w)
+    for w in ["precipitation", "avg_temp", "max_temp", "min_temp"]
 )
 
+
 # %%
-for file in os.listdir():
-    if os.path.getsize(file) > 3000000:
-        os.remove(file)
+def erase_large_files():
+    for file in os.listdir():
+        if os.path.getsize(file) > 3000000:
+            os.remove(file)
+
+
+erase_large_files()
 
 
 # %%
-def prepare_final_df(df: pd.DataFrame, variable: str) -> pd.DataFrame:
+def prepare_final_df(df: pd.DataFrame) -> pd.DataFrame:
     """"""
     # change = lambda df, variable, n: df[variable].diff(n)
     # rate_change = lambda df, variable, n: df[variable].pct_change(n)
 
-    df = (
-        # df.assign(
-        #     month_change=change(df, variable, 1),
-        #     month_rate_change=rate_change(df, variable, 1),
-        #     month_yoy_change=change(df, variable, 12),
-        #     month_yoy_rate_change=rate_change(df, variable, 1),
-        # )
-        df.query("date>=1960").set_index("date")
-    )
+    # df = (
+    # df.assign(
+    #     month_change=change(df, variable, 1),
+    #     month_rate_change=rate_change(df, variable, 1),
+    #     month_yoy_change=change(df, variable, 12),
+    #     month_yoy_rate_change=rate_change(df, variable, 1),
+    # )
+    # df.query("date>=1960").set_index("date")
+    # )
 
     # df.to_parquet(f"{variable}.parquet")
-    return df
+    # df = df.query("date>=1960").set_index("date")
+    # df.index = df.index.to_period("M")
+    # return df
+    return df.set_index("date")
 
 
 # %%
 PRECIPITATION, AVG_TEMP, MAX_TEMP, MIN_TEMP = (
-    prepare_final_df(df, variable)
+    df.pipe(prepare_final_df)
     for variable, df in dict(
         zip(
             ["precipitation", "avg_temp", "max_temp", "min_temp"],
@@ -485,7 +402,7 @@ PRECIPITATION, AVG_TEMP, MAX_TEMP, MIN_TEMP = (
 TEMP = pd.concat([AVG_TEMP, MIN_TEMP, MAX_TEMP], axis="columns").T.drop_duplicates().T
 
 # %%
-TEMP.to_parquet("temp.parquet")
+TEMP.to_parquet("temp.parquet", compression="brotli")
 
 # %%
-PRECIPITATION.to_parquet("precipitation.parquet")
+PRECIPITATION.to_parquet("precipitation.parquet", compression="brotli")
