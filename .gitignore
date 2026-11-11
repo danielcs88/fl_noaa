@@ -16,3 +16,6 @@ min_temp.csv
 avg_temp.csv
 climdiv-*
 .venv/
+
+# Local-only logs
+Log/
