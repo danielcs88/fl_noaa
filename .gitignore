@@ -19,3 +19,6 @@ climdiv-*
 
 # Local-only logs
 Log/
+
+# macOS
+.DS_Store
