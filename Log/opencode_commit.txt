@@ -1,0 +1,35 @@
+[0m
+> build · big-pickle
+[0m→ [0mRead .github/workflows/update.yml 
+[0m$ [0mcd /Users/daniel/Github/fl_noaa && git diff --stat HEAD && git status --short
+.DS_Store                    | Bin 6148 -> 6148 bytes
+ .github/workflows/update.yml |  52 +++++++++
+ .gitignore                   |   8 ++
+ .python-version              |   1 +
+ Exploratory.ipynb            | 272 ++++++++++++++++++++++++++++---------------
+ fl_noaa_time_series.py       |   8 +-
+ ftp.py                       | 106 +++++------------
+ git_descriptive.sh           |  61 ++++++++++
+ github.sh                    |   1 -
+ precipitation.parquet        | Bin 162931 -> 215137 bytes
+ requirements.txt             |   8 +-
+ run.sh                       |   2 +-
+ temp.parquet                 | Bin 368662 -> 426725 bytes
+ 13 files changed, 339 insertions(+), 180 deletions(-)
+M  .DS_Store
+A  .github/workflows/update.yml
+M  .gitignore
+A  .python-version
+M  Exploratory.ipynb
+M  fl_noaa_time_series.py
+M  ftp.py
+A  git_descriptive.sh
+D  github.sh
+M  precipitation.parquet
+M  requirements.txt
+M  run.sh
+M  temp.parquet
+?? Log/
+> build · big-pickle
+--- exit: 0 ---
+🔧 chore: add scheduled workflow to auto-update NOAA data

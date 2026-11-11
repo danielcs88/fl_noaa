@@ -1,6 +1,6 @@
 # Florida County Time Series: NOAA
 
-![NOAA Logo](https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/NOAA_logo.svg/240px-NOAA_logo.svg.png)
+![NOAA Logo](NOAA_logo.svg)
 
 ## Run
 
