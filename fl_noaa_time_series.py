@@ -144,7 +144,7 @@ field contains 11 columns. The other data files still contain 10 columns.
 """
 
 # %%
-LOCAL_FILES = os.listdir()
+LOCAL_FILES = sorted(os.listdir())
 
 VALUES = ["precipitation", "max_temp", "min_temp", "avg_temp"]
 
@@ -399,7 +399,11 @@ PRECIPITATION, AVG_TEMP, MAX_TEMP, MIN_TEMP = (
 )
 
 # %%
-TEMP = pd.concat([AVG_TEMP, MIN_TEMP, MAX_TEMP], axis="columns").T.drop_duplicates().T
+TEMP = (
+    pd.concat([AVG_TEMP, MIN_TEMP, MAX_TEMP], axis="columns", sort=True)
+    .T.drop_duplicates()
+    .T
+)
 
 # %%
 TEMP.to_parquet("temp.parquet", compression="brotli")

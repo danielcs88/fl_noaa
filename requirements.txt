@@ -1,3 +1,7 @@
-wget
 pandas
-
+pyarrow
+ipython
+nbconvert
+ipykernel
+matplotlib
+ipywidgets

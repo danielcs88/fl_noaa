@@ -1,111 +1,61 @@
 # -*- coding: utf-8 -*-
 # %%
 r"""
-Script to download latest values for weather variables from NOAA FTP Server
+Script to download latest values for weather variables from NOAA NCEI.
+
+NOAA retired the anonymous FTP server (ftp.ncei.noaa.gov). The climdiv files
+are now served over HTTPS from the directory below.
 """
 
 # %
 __author__ = "Daniel Cárdenas"
-__version__ = "1.0"
+__version__ = "2.0"
 __maintainer__ = "Daniel Cárdenas"
 __email__ = "jcard151@fiu.edu"
 
 # %% [markdown]
-# # FTP Downloader for NOAA Climate County Data
+# # HTTPS Downloader for NOAA Climate County Data
 
 # %%
-import ftplib
 import os
-from datetime import datetime
+import re
+import urllib.request
 
 # %%
-# Delete existing *.csv files or NOAA weather files
+BASE_URL = (
+    "https://www.ncei.noaa.gov/monitoring-content/data/us/climdiv/monthly/current/"
+)
+PREFIXES = ("climdiv-pcpncy", "climdiv-tmaxcy", "climdiv-tmincy", "climdiv-tmpccy")
 
+# %%
+# Delete existing raw NOAA weather files (the only files larger than 3 MB)
 for file in os.listdir():
-    if os.path.getsize(file) > 3000000:
+    if os.path.isfile(file) and os.path.getsize(file) > 3000000:
         os.remove(file)
 
 
 # %%
-# some utility functions that we gonna need
-def get_size_format(n, suffix="B"):
-    """
-    Converts bytes to scaled format (e.g KB, MB, etc.)
-    """
-
-    for unit in ["", "K", "M", "G", "T", "P"]:
-        if n < 1024:
-            return f"{n:.2f}{unit}{suffix}"
-        n /= 1024
-
-
-def get_datetime_format(date_time):
-    """
-    Returns formatted date/time.
-    """
-
-    # convert to datetime object
-    date_time = datetime.strptime(date_time, "%Y%m%d%H%M%S")
-    # convert to human readable date time string
-    return date_time.strftime("%Y/%m/%d %H:%M:%S")
+def fetch(url: str) -> bytes:
+    request = urllib.request.Request(url, headers={"User-Agent": "fl-noaa-updater"})
+    with urllib.request.urlopen(request, timeout=120) as response:
+        return response.read()
 
 
 # %%
-# initialize FTP session
-
-# FTP_USER = "anonymous"
-# FTP_PASS = ""
-
-try:
-    FTP_HOST = r"ftp.ncdc.noaa.gov"
-    #     FTP = ftplib.FTP(FTP_HOST, FTP_USER, FTP_PASS)
-    FTP = ftplib.FTP(FTP_HOST)
-    FTP.login()
-
-except EOFError:
-    FTP_HOST = r"ftp.ncei.noaa.gov"
-    #     FTP = ftplib.FTP(FTP_HOST, FTP_USER, FTP_PASS)
-    FTP = ftplib.FTP(FTP_HOST)
-    FTP.login()
+PROCDATE = fetch(BASE_URL + "procdate.txt").decode().strip()
+print(f"NOAA processing date: {PROCDATE}")
 
 # %%
-# force UTF-8 encoding
-FTP.encoding = "utf-8"
-
-# %%
-# print the welcome message
-print(FTP.getwelcome())
-
-# %%
-FTP.cwd("pub/data/cirs/climdiv")
-
-# %%
-FILE_LIST = FTP.nlst()
-
-# %%
-FINAL_LIST = []
-
-for file in FILE_LIST:
-    if file.startswith("climdiv-pcpncy"):
-        FINAL_LIST.append(file)
-    elif file.startswith("climdiv-tmaxcy"):
-        FINAL_LIST.append(file)
-    elif file.startswith("climdiv-tmincy"):
-        FINAL_LIST.append(file)
-    elif file.startswith("climdiv-tmpccy"):
-        FINAL_LIST.append(file)
-
-# %%
+LISTING = fetch(BASE_URL).decode()
+FILE_LIST = sorted(set(re.findall(r'href="(climdiv-[^"/]+)"', LISTING)))
+FINAL_LIST = [f for f in FILE_LIST if f.startswith(PREFIXES)]
 print(FINAL_LIST)
+
+if len(FINAL_LIST) != len(PREFIXES):
+    raise RuntimeError(f"Expected {len(PREFIXES)} files, found: {FINAL_LIST}")
 
 # %%
 for filename in FINAL_LIST:
     print(filename)
-
     with open(filename, "wb") as f:
-        FTP.retrbinary("RETR " + filename, f.write)
-
-FTP.close()
-
-# %%
-# quit and close the connection
+        f.write(fetch(BASE_URL + filename))
